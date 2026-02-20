@@ -57,28 +57,30 @@
         const LED_COLORS = { cold: 'radial-gradient(circle, rgba(0,210,255,0.8) 0%, rgba(58,123,213,0.4) 100%)', overheat: 'radial-gradient(circle, rgba(255,65,108,0.8) 0%, rgba(255,75,43,0.4) 100%)', start: 'radial-gradient(circle, rgba(86,171,47,0.8) 0%, rgba(168,224,99,0.4) 100%)', shocked: 'radial-gradient(circle, rgba(255,216,155,0.8) 0%, rgba(25,10,5,0.4) 100%)', dashboard: 'radial-gradient(circle, rgba(48,207,208,0.8) 0%, rgba(51,8,103,0.4) 100%)', myroboeyes: 'radial-gradient(circle, rgba(147,112,219,0.8) 0%, rgba(186,85,211,0.4) 100%)' };
         let my_eyeW=56, my_eyeH_Max=56, my_curLx=42, my_curLy=92, my_curLh=56, my_targetLx=42, my_targetLy=92, my_targetLh=56, my_currentMood = 0;
         let my_blinkTimer = performance.now()+2000, my_idleTimer = performance.now()+4000, my_moodTimer = performance.now()+4000;
+        let shakeX = 0, shakeY = 0;
 
         function updateEyesLogic() {
             const now = performance.now();
-            let blinkSpeed = 0.20; // Vitesse par défaut
-            let moveSpeed = 0.20; // Vitesse par défaut
+            let blinkSpeed = 0.20;
+            let moveSpeed = 0.20;
+            shakeX = 0; shakeY = 0;
             
             if (currentExpression === 'start') {
                 let cycle = (now - switchTimer) % 3000; 
-                if (cycle < 1000) my_targetLx = 25; 
-                else if (cycle < 2000) my_targetLx = 65; 
-                else my_targetLx = 42;
+                if (cycle < 1000) my_targetLx = 25; else if (cycle < 2000) my_targetLx = 65; else my_targetLx = 42;
                 my_targetLy = 92; my_targetLh = 56;
-                moveSpeed = 0.15; // Balayage plus "humain"
+                moveSpeed = 0.15;
             } else if (currentExpression === 'shocked') {
-                let stage = (now - switchTimer) % 2500; // Cycle court pour le bug
-                if (stage < 300) { my_targetLh = 56; }
-                else if (stage < 500) { my_targetLh = 0; }
-                else if (stage < 1500) { my_targetLh = 4; } // Plat (-_-)
-                else if (stage < 1700) { my_targetLh = 0; }
+                let stage = (now - switchTimer) % 2000; // Cycle plus rapide
+                if (stage < 400) { my_targetLh = 56; }
+                else if (stage < 600) { my_targetLh = 0; }
+                else if (stage < 1400) { my_targetLh = 4; } // Plat (-_-)
+                else if (stage < 1600) { my_targetLh = 0; }
                 else { my_targetLh = 56; }
                 my_targetLx = 42; my_targetLy = 92;
-                blinkSpeed = 0.85; // TRÈS RAPIDE pour le bug
+                blinkSpeed = 0.9; // Presque instantané
+                shakeX = (Math.random() - 0.5) * 6; // Gros tremblement
+                shakeY = (Math.random() - 0.5) * 6;
             } else {
                 if (now > my_moodTimer && (currentExpression==='dashboard'||currentExpression==='myroboeyes')) { my_currentMood = (my_currentMood+1)%4; my_moodTimer = now+4000; }
                 if (now > my_blinkTimer) { my_targetLh = 0; my_blinkTimer = now+Math.random()*3000+2000; }
@@ -99,14 +101,16 @@
             let currentMoodToDraw = (mode === 'start' || mode === 'shocked') ? 0 : my_currentMood;
             if (mode === 'overheat') currentMoodToDraw = 2;
 
+            let ox = (mode === 'shocked' ? shakeX : 0);
+            let oy = (mode === 'shocked' ? shakeY : 0);
+
             if (my_curLh < 12) { 
                 drawW=64; drawH=Math.max(2, Math.floor(my_curLh/2)); 
-                drawRadius=3; 
-                finalY=Math.floor(my_curLy+25); 
-                xL=Math.floor(my_curLx-4); xR=xL+88; 
+                drawRadius=3; finalY=Math.floor(my_curLy+25) + oy; 
+                xL=Math.floor(my_curLx-4) + ox; xR=xL+88; 
             } else { 
-                finalY=Math.floor(my_curLy+(56-drawH)/2); 
-                xL=Math.floor(my_curLx); xR=xL+80; 
+                finalY=Math.floor(my_curLy+(56-drawH)/2) + oy; 
+                xL=Math.floor(my_curLx) + ox; xR=xL+80; 
             }
             
             ctx.fillStyle = COLORS.WHITE;
