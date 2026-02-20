@@ -44,8 +44,8 @@
                 <button id="btn-myroboeyes" class="btn-full" onclick="setExpression('myroboeyes')">👀 Yeux Uniquement</button>
                 <button id="btn-cold" onclick="setExpression('cold')">🥶 Moteur Froid</button>
                 <button id="btn-overheat" onclick="setExpression('overheat')">🥵 Surchauffe</button>
-                <button id="btn-start" onclick="setExpression('start')">😊 Démarrage OK</button>
-                <button id="btn-shocked" onclick="setExpression('shocked')">😱 Moteur Cale</button>
+                <button id="btn-start" onclick="setExpression('start')">😊 Démarrage OK (Mvt)</button>
+                <button id="btn-shocked" onclick="setExpression('shocked')">😱 Moteur Cale (Bug)</button>
             </div>
         </div>
     </div>
@@ -60,31 +60,44 @@
 
         function updateEyesLogic() {
             const now = performance.now();
-            if (now > my_moodTimer && (currentExpression==='dashboard'||currentExpression==='myroboeyes')) { my_currentMood = (my_currentMood+1)%4; my_moodTimer = now+4000; }
-            if (now > my_blinkTimer) { my_targetLh = 0; my_blinkTimer = now+Math.random()*3000+2000; }
-            if (now > my_idleTimer) { my_targetLx = Math.random()*50+40; my_targetLy = Math.random()*35+70; my_idleTimer = now+Math.random()*4000+2000; }
+            if (currentExpression === 'start') {
+                let cycle = (now - switchTimer) % 3000;
+                if (cycle < 1000) my_targetLx = 20; // Gauche
+                else if (cycle < 2000) my_targetLx = 70; // Droite
+                else my_targetLx = 42; // Centre
+                my_targetLy = 92;
+            } else if (currentExpression === 'shocked') {
+                let stage = (now - switchTimer) % 4000;
+                if (stage < 800) { my_targetLh = 56; } // Standard
+                else if (stage < 1200) { my_targetLh = 0; } // Blink
+                else if (stage < 2500) { my_targetLh = 6; } // Plat (-_-)
+                else if (stage < 3000) { my_targetLh = 0; } // Blink
+                else { my_targetLh = 56; } // Standard
+            } else {
+                if (now > my_moodTimer && (currentExpression==='dashboard'||currentExpression==='myroboeyes')) { my_currentMood = (my_currentMood+1)%4; my_moodTimer = now+4000; }
+                if (now > my_blinkTimer) { my_targetLh = 0; my_blinkTimer = now+Math.random()*3000+2000; }
+                if (now > my_idleTimer) { my_targetLx = Math.random()*50+40; my_targetLy = Math.random()*35+70; my_idleTimer = now+Math.random()*4000+2000; }
+            }
             const speed = (my_targetLh === 0 || my_curLh < 10) ? 0.40 : 0.20;
             my_curLx += (my_targetLx - my_curLx) * 0.20; my_curLy += (my_targetLy - my_curLy) * 0.20; my_curLh += (my_targetLh - my_curLh) * speed;
-            if (my_curLh < 1.0) my_targetLh = 56;
+            if (my_curLh < 1.0 && currentExpression !== 'shocked') my_targetLh = 56;
         }
 
         function drawBaseEyes(bgColor, mode = 'normal', offX = 0, offY = 0) {
             ctx.fillStyle = bgColor; ctx.fillRect(0, 0, 240, 240);
             let drawW=56, drawH, drawRadius=16, finalY, xL, xR;
-            let currentMoodToDraw = my_currentMood;
+            let currentMoodToDraw = (mode === 'start' || mode === 'shocked') ? 0 : my_currentMood;
             
-            if (mode === 'shocked') { drawW=65; drawH=75; drawRadius=32; finalY=120-drawH/2; xL=120-drawW-15; xR=120+15; }
-            else if (my_curLh < 12) { drawW=64; drawH=6; drawRadius=3; finalY=Math.floor(my_curLy+25)+offY; xL=Math.floor(my_curLx-4)+offX; xR=xL+88; }
+            if (my_curLh < 12) { drawW=64; drawH=6; drawRadius=3; finalY=Math.floor(my_curLy+25)+offY; xL=Math.floor(my_curLx-4)+offX; xR=xL+88; }
             else { drawH=Math.floor(my_curLh); finalY=Math.floor(my_curLy+(56-drawH)/2)+offY; xL=Math.floor(my_curLx)+offX; xR=xL+80; }
             
             if (mode === 'overheat') currentMoodToDraw = 2; // Angry
-            if (mode === 'start') currentMoodToDraw = 3; // Happy
-
+            
             ctx.fillStyle = COLORS.WHITE;
             roundRect(ctx, xL, finalY, drawW, drawH, drawRadius, true);
             roundRect(ctx, xR, finalY, drawW, drawH, drawRadius, true);
             
-            if (my_curLh >= 12 || mode === 'shocked') {
+            if (my_curLh >= 12) {
                 let mH = drawH/2;
                 if (currentMoodToDraw===2) { // ANGRY
                     fillTriangle(ctx,xL,finalY,xL+drawW,finalY,xL+drawW,finalY+mH,bgColor);
@@ -93,20 +106,14 @@
                     fillTriangle(ctx,xL,finalY,xL+drawW,finalY,xL,finalY+mH,bgColor);
                     fillTriangle(ctx,xR,finalY,xR+drawW,finalY,xR+drawW,finalY+mH,bgColor);
                 } else if (currentMoodToDraw===3) { // HAPPY
-                    ctx.fillStyle = bgColor;
-                    roundRect(ctx,xL-2,finalY+mH,drawW+4,60,16,true);
-                    roundRect(ctx,xR-2,finalY+mH,drawW+4,60,16,true);
+                    ctx.fillStyle = bgColor; roundRect(ctx,xL-2,finalY+mH,drawW+4,60,16,true); roundRect(ctx,xR-2,finalY+mH,drawW+4,60,16,true);
                 }
             }
         }
 
         function drawOverheat() {
             drawBaseEyes('#290000', 'overheat');
-            ctx.fillStyle = COLORS.CYAN; // Gouttes de sueur
-            for(let i=0; i<3; i++) {
-                let dropY = 100 + (animFrame*2 + i*40)%100;
-                ctx.beginPath(); ctx.arc(210, dropY, 4, 0, Math.PI*2); ctx.fill();
-            }
+            ctx.fillStyle = COLORS.CYAN; for(let i=0; i<3; i++) { let dropY = 100 + (animFrame*2 + i*40)%100; ctx.beginPath(); ctx.arc(210, dropY, 4, 0, Math.PI*2); ctx.fill(); }
         }
 
         function drawCold() {
@@ -132,14 +139,11 @@
             ctx.fillStyle = COLORS.YELLOW; ctx.font = '40px Arial'; ctx.fillText(spd, 120, 195);
         }
 
-        function drawArc(x, y, r, innerR, startAngle, endAngle, color) {
-            ctx.beginPath(); let sa = (startAngle+90)*Math.PI/180; let ea = (endAngle+90)*Math.PI/180;
-            ctx.arc(x, y, r, sa, ea); ctx.arc(x, y, innerR, ea, sa, true); ctx.fillStyle = color; ctx.fill();
-        }
+        function drawArc(x, y, r, innerR, startAngle, endAngle, color) { ctx.beginPath(); let sa = (startAngle+90)*Math.PI/180; let ea = (endAngle+90)*Math.PI/180; ctx.arc(x, y, r, sa, ea); ctx.arc(x, y, innerR, ea, sa, true); ctx.fillStyle = color; ctx.fill(); }
 
         function setExpression(expr) {
-            currentExpression = expr; animFrame = 0; ledRing.style.background = LED_COLORS[expr];
-            if (expr === 'dashboard') { isSwitching = true; switchTimer = performance.now(); moodLabel.textContent = "INITIALISATION..."; }
+            currentExpression = expr; animFrame = 0; ledRing.style.background = LED_COLORS[expr]; switchTimer = performance.now();
+            if (expr === 'dashboard') { isSwitching = true; moodLabel.textContent = "INITIALISATION..."; }
             else { isSwitching = false; moodLabel.textContent = expr.toUpperCase(); }
         }
 
