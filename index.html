@@ -17,101 +17,26 @@
             min-height: 100vh;
         }
         
-        h1 {
-            margin: 0 0 10px 0;
-            font-size: 2.5em;
-            text-shadow: 0 0 20px rgba(255,255,255,0.3);
-        }
+        h1 { margin: 0 0 10px 0; font-size: 2.5em; text-shadow: 0 0 20px rgba(255,255,255,0.3); }
+        .subtitle { color: #888; margin-bottom: 30px; }
         
-        .subtitle {
-            color: #888;
-            margin-bottom: 30px;
-        }
-        
-        #container {
-            display: flex;
-            gap: 40px;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        #screen-container {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
+        #container { display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+        #screen-container { position: relative; display: flex; flex-direction: column; align-items: center; gap: 20px; }
         
         #led-ring {
-            position: absolute;
-            width: 340px;
-            height: 340px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
-            filter: blur(30px);
-            opacity: 0.6;
-            z-index: 0;
-            transition: background 0.5s ease;
+            position: absolute; width: 340px; height: 340px; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); border-radius: 50%; filter: blur(30px);
+            opacity: 0.6; z-index: 0; transition: background 0.5s ease;
         }
         
-        #canvas {
-            border-radius: 50%;
-            box-shadow: 
-                0 0 40px rgba(0,0,0,0.5),
-                inset 0 0 20px rgba(0,0,0,0.3);
-            position: relative;
-            z-index: 1;
-        }
+        #canvas { border-radius: 50%; box-shadow: 0 0 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,0,0,0.3); position: relative; z-index: 1; }
+        #controls { background: rgba(255,255,255,0.05); padding: 30px; border-radius: 20px; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-width: 400px; }
+        h2 { margin-top: 0; color: #fff; font-size: 1.5em; border-bottom: 2px solid rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 20px; }
         
-        #controls {
-            background: rgba(255,255,255,0.05);
-            padding: 30px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            max-width: 400px;
-        }
-        
-        h2 {
-            margin-top: 0;
-            color: #fff;
-            font-size: 1.5em;
-            border-bottom: 2px solid rgba(255,255,255,0.2);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        button {
-            padding: 15px 25px;
-            font-size: 14px;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        }
-        
-        button:active {
-            transform: translateY(0);
-        }
+        .btn-group { display: flex; flex-direction: column; gap: 12px; }
+        button { padding: 15px 25px; font-size: 14px; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-transform: uppercase; letter-spacing: 1px; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        button:active { transform: translateY(0); }
         
         #btn-myroboeyes { background: linear-gradient(135deg, #9370DB 0%, #BA55D3 100%); color: white; }
         #btn-dashboard { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color: white; }
@@ -120,23 +45,7 @@
         #btn-robot { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
         #btn-sunburst { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; }
         
-        .info {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        
-        #mood-label {
-            font-size: 1.2em;
-            margin-top: 15px;
-            padding: 10px 20px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
-            text-align: center;
-        }
+        #mood-label { font-size: 1.2em; margin-top: 15px; padding: 10px 20px; background: rgba(255,255,255,0.1); border-radius: 8px; text-align: center; }
     </style>
 </head>
 <body>
@@ -147,25 +56,18 @@
         <div id="screen-container">
             <div id="led-ring"></div>
             <canvas id="canvas" width="240" height="240"></canvas>
-            <div id="mood-label">Mode: DASHBOARD OBD</div>
+            <div id="mood-label">DÉMARRAGE...</div>
         </div>
         
         <div id="controls">
             <h2>🎨 Expressions & Modes</h2>
             <div class="btn-group">
-                <button id="btn-dashboard" onclick="setExpression('dashboard')">📊 Dashboard OBD (Corrigé)</button>
-                <button id="btn-myroboeyes" onclick="setExpression('myroboeyes')">👀 Yeux Uniquement (Fidèle)</button>
-                <button id="btn-kawaii" onclick="setExpression('kawaii')">😊 Kawaii</button>
-                <button id="btn-cyclope" onclick="setExpression('cyclope')">👁️ Cyclope</button>
+                <button id="btn-dashboard" onclick="setExpression('dashboard')">📊 Dashboard (Auto-Switch)</button>
+                <button id="btn-myroboeyes" onclick="setExpression('myroboeyes')">👀 Yeux Uniquement</button>
+                <button id="btn-kawaii" onclick="setExpression('kawaii')">😊 Kawaii (Tes Yeux)</button>
+                <button id="btn-cyclope" onclick="setExpression('cyclope')">👁️ Cyclope (Ton Œil)</button>
                 <button id="btn-robot" onclick="setExpression('robot')">🤖 Robot</button>
                 <button id="btn-sunburst" onclick="setExpression('sunburst')">✨ Réveil</button>
-            </div>
-            
-            <div class="info">
-                <strong>💡 Instructions :</strong><br>
-                • Ce simulateur est fidèle au code <strong>RoboOBD_Final</strong><br>
-                • Le mode Dashboard simule les arcs RPM/Vitesse réels<br>
-                • Les émotions changent en arrière-plan
             </div>
         </div>
     </div>
@@ -178,7 +80,8 @@
         
         let currentExpression = 'dashboard';
         let animFrame = 0;
-        let lastUpdateTime = performance.now();
+        let switchTimer = 0;
+        let isSwitching = true;
         
         const COLORS = {
             BLACK: '#000000', WHITE: '#FFFFFF', CREAM: '#FFF8DC',
@@ -196,7 +99,7 @@
             myroboeyes: 'radial-gradient(circle, rgba(147,112,219,0.8) 0%, rgba(186,85,211,0.4) 100%)'
         };
 
-        // --- LOGIQUE YEUX (Fidèle à ton code RoboEyes) ---
+        // --- LOGIQUE YEUX (Tes Yeux RoboEyes) ---
         let my_eyeW=56, my_eyeH_Max=56, my_borderRadius=16, my_spaceBetween=24, my_blinkThreshold=12.0;
         let my_curLx=42, my_curLy=92, my_curLh=56;
         let my_targetLx=42, my_targetLy=92, my_targetLh=56;
@@ -213,128 +116,93 @@
             if (my_curLh < 1.0) my_targetLh = 56;
         }
 
-        function drawEyesToCanvas(bgColor = COLORS.BLACK) {
-            ctx.fillStyle = bgColor;
-            ctx.fillRect(0, 0, 240, 240);
-            
+        function drawBaseEyes(bgColor, mode = 'normal') {
+            ctx.fillStyle = bgColor; ctx.fillRect(0, 0, 240, 240);
             let drawW, drawH, drawRadius, finalY, xL, xR;
+            
+            if (mode === 'cyclope') {
+                drawW=70; drawH= (my_curLh < 12) ? 8 : Math.floor(my_curLh * 1.2);
+                drawRadius=35; finalY=120-drawH/2; xL=120-drawW/2;
+                ctx.fillStyle = COLORS.WHITE; roundRect(ctx, xL, finalY, drawW, drawH, drawRadius, true);
+                return;
+            }
+
             if (my_curLh < 12) { drawW=64; drawH=6; drawRadius=3; finalY=Math.floor(my_curLy+25); xL=Math.floor(my_curLx-4); xR=xL+88; }
-            else { drawW=56; drawH=Math.floor(my_curLh); drawRadius=16; finalY=Math.floor(my_curLy+(56-drawH)/2); xL=Math.floor(my_curLx); xR=xL+80; }
+            else { drawW=56; drawH=Math.floor(my_curLh); drawRadius=(mode==='kawaii'?28:16); finalY=Math.floor(my_curLy+(56-drawH)/2); xL=Math.floor(my_curLx); xR=xL+80; }
             
             ctx.fillStyle = COLORS.WHITE;
             roundRect(ctx, xL, finalY, drawW, drawH, drawRadius, true);
             roundRect(ctx, xR, finalY, drawW, drawH, drawRadius, true);
             
+            // Émotions
             if (my_curLh >= 12) {
                 let mH = drawH/2;
                 if (my_currentMood===2) { // ANGRY
-                    fillTriangle(ctx,xL,finalY,xL+56,finalY,xL+56,finalY+mH,bgColor);
-                    fillTriangle(ctx,xR,finalY,xR+56,finalY,xR,finalY+mH,bgColor);
+                    fillTriangle(ctx,xL,finalY,xL+drawW,finalY,xL+drawW,finalY+mH,bgColor);
+                    fillTriangle(ctx,xR,finalY,xR+drawW,finalY,xR,finalY+mH,bgColor);
                 } else if (my_currentMood===1) { // TIRED
-                    fillTriangle(ctx,xL,finalY,xL+56,finalY,xL,finalY+mH,bgColor);
-                    fillTriangle(ctx,xR,finalY,xR+56,finalY,xR+56,finalY+mH,bgColor);
+                    fillTriangle(ctx,xL,finalY,xL+drawW,finalY,xL,finalY+mH,bgColor);
+                    fillTriangle(ctx,xR,finalY,xR+drawW,finalY,xR+drawW,finalY+mH,bgColor);
                 } else if (my_currentMood===3) { // HAPPY
-                    ctx.fillStyle = bgColor;
-                    roundRect(ctx,xL-2,finalY+mH,60,56,16,true);
-                    roundRect(ctx,xR-2,finalY+mH,60,56,16,true);
+                    ctx.fillStyle = bgColor; roundRect(ctx,xL-2,finalY+mH,drawW+4,60,16,true); roundRect(ctx,xR-2,finalY+mH,drawW+4,60,16,true);
                 }
             }
         }
 
-        // --- DASHBOARD LOGIC (Fidèle au nouveau code RoboOBD) ---
-        function getSpeedColor(spd) {
-            if (spd < 40) return COLORS.BLUE;
-            if (spd < 80) return COLORS.YELLOW;
-            return COLORS.GREEN;
-        }
-        function getRPMColor(rpm) {
-            if (rpm < 2000) return COLORS.YELLOW;
-            if (rpm < 4000) return COLORS.ORANGE;
-            return COLORS.RED;
+        function drawDashboard() {
+            drawBaseEyes(COLORS.BG_DARK_BLUE);
+            const spd = Math.floor(80 + Math.sin(animFrame * 0.05) * 40);
+            const rpm = Math.floor(3000 + Math.sin(animFrame * 0.03) * 2000);
+            const tmp = 90;
+            
+            drawArc(120, 120, 115, 100, 60, 60 + 240, COLORS.V_DARK);
+            drawArc(120, 120, 95, 85, 60, 60 + 240, COLORS.V_DARK);
+            drawArc(120, 120, 115, 100, 60, 60 + (spd/240*240), (spd<40?COLORS.BLUE:spd<80?COLORS.YELLOW:COLORS.GREEN));
+            drawArc(120, 120, 95, 85, 60, 60 + (rpm/8000*240), (rpm<2000?COLORS.YELLOW:rpm<4000?COLORS.ORANGE:COLORS.RED));
+
+            ctx.textAlign = 'center';
+            ctx.fillStyle = COLORS.CYAN; ctx.font = '30px Arial'; ctx.fillText(tmp, 120, 80);
+            ctx.fillStyle = COLORS.WHITE; ctx.font = '50px Arial'; ctx.fillText(rpm, 120, 135);
+            ctx.fillStyle = COLORS.YELLOW; ctx.font = '40px Arial'; ctx.fillText(spd, 120, 195);
         }
 
         function drawArc(x, y, r, innerR, startAngle, endAngle, color) {
-            ctx.beginPath();
-            let sa = (startAngle + 90) * Math.PI / 180;
-            let ea = (endAngle + 90) * Math.PI / 180;
-            ctx.arc(x, y, r, sa, ea);
-            ctx.arc(x, y, innerR, ea, sa, true);
-            ctx.fillStyle = color;
-            ctx.fill();
+            ctx.beginPath(); let sa = (startAngle + 90) * Math.PI / 180; let ea = (endAngle + 90) * Math.PI / 180;
+            ctx.arc(x, y, r, sa, ea); ctx.arc(x, y, innerR, ea, sa, true);
+            ctx.fillStyle = color; ctx.fill();
         }
 
-        function drawDashboard() {
-            drawEyesToCanvas(COLORS.BG_DARK_BLUE);
-            
-            const spd = Math.floor(80 + Math.sin(animFrame * 0.05) * 40);
-            const rpm = Math.floor(3000 + Math.sin(animFrame * 0.03) * 2000);
-            const tmp = Math.floor(90 + Math.sin(animFrame * 0.01) * 5);
-            const START_ANGLE = 60;
-            
-            drawArc(120, 120, 115, 100, START_ANGLE, START_ANGLE + 240, COLORS.V_DARK);
-            drawArc(120, 120, 95, 85, START_ANGLE, START_ANGLE + 240, COLORS.V_DARK);
-
-            let endAngleSpd = START_ANGLE + (spd / 240.0) * 240.0;
-            drawArc(120, 120, 115, 100, START_ANGLE, endAngleSpd, getSpeedColor(spd));
-            let endAngleRpm = START_ANGLE + (rpm / 8000.0) * 240.0;
-            drawArc(120, 120, 95, 85, START_ANGLE, endAngleRpm, getRPMColor(rpm));
-
-            ctx.textAlign = 'center';
-            ctx.fillStyle = COLORS.CYAN; ctx.font = 'bold 30px Arial'; ctx.fillText(tmp, 120, 80);
-            ctx.font = '12px Arial'; ctx.fillText('C', 155, 75);
-            ctx.fillStyle = COLORS.WHITE; ctx.font = 'bold 50px Arial'; ctx.fillText(rpm, 120, 135);
-            ctx.fillStyle = COLORS.YELLOW; ctx.font = 'bold 40px Arial'; ctx.fillText(spd, 120, 195);
-            ctx.font = '14px Arial'; ctx.fillText('km/h', 165, 195);
-        }
-
-        // --- HELPERS & ANIMATION ---
         function setExpression(expr) {
-            currentExpression = expr;
-            animFrame = 0;
-            ledRing.style.background = LED_COLORS[expr];
-            moodLabel.textContent = (expr === 'dashboard') ? "Mode: DASHBOARD OBD" : `Expression: ${expr.toUpperCase()}`;
+            currentExpression = expr; animFrame = 0; ledRing.style.background = LED_COLORS[expr];
+            if (expr === 'dashboard') { isSwitching = true; switchTimer = performance.now(); moodLabel.textContent = "INITIALISATION..."; }
+            else { isSwitching = false; moodLabel.textContent = expr.toUpperCase(); }
         }
 
         function roundRect(ctx, x, y, width, height, radius, fill) {
             ctx.beginPath(); ctx.moveTo(x + radius, y); ctx.lineTo(x + width - radius, y);
             ctx.quadraticCurveTo(x + width, y, x + width, y + radius); ctx.lineTo(x + width, y + height - radius);
             ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height); ctx.lineTo(x + radius, y + height);
-            ctx.quadraticCurveTo(x, y + height, x, y + height - radius); ctx.lineTo(x, y + radius);
-            ctx.quadraticCurveTo(x, y, x + radius, y); ctx.closePath();
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius); ctx.lineTo(x, y + radius); ctx.quadraticCurveTo(x, y, x + radius, y); ctx.closePath();
             if (fill) ctx.fill(); else ctx.stroke();
         }
 
-        function fillTriangle(ctx, x1, y1, x2, y2, x3, y3, color) {
-            ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo(x3, y3); ctx.closePath(); ctx.fill();
-        }
+        function fillTriangle(ctx,x1,y1,x2,y2,x3,y3,color) { ctx.fillStyle=color; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.lineTo(x3,y3); ctx.closePath(); ctx.fill(); }
 
         function animate() {
-            animFrame++;
-            updateEyesLogic();
-            switch(currentExpression) {
-                case 'dashboard': drawDashboard(); break;
-                case 'myroboeyes': drawEyesToCanvas(); break;
-                case 'kawaii': 
-                    drawEyesToCanvas(); ctx.fillStyle = COLORS.BLACK;
-                    ctx.beginPath(); ctx.arc(my_curLx+28, my_curLy+28, 15, 0, Math.PI*2); ctx.fill();
-                    ctx.beginPath(); ctx.arc(my_curLx+108, my_curLy+28, 15, 0, Math.PI*2); ctx.fill();
-                    break;
-                case 'cyclope':
-                    ctx.fillStyle = COLORS.BLACK; ctx.fillRect(0,0,240,240);
-                    ctx.fillStyle = COLORS.YELLOW; ctx.beginPath(); ctx.arc(120, 120, 60 + Math.sin(animFrame*0.1)*5, 0, Math.PI*2); ctx.fill();
-                    break;
-                case 'robot':
-                    ctx.fillStyle = COLORS.BLACK; ctx.fillRect(0,0,240,240);
-                    ctx.fillStyle = COLORS.CYAN; roundRect(ctx, 60, 100, 40, 12, 4, true); roundRect(ctx, 140, 100, 40, 12, 4, true);
-                    break;
-                case 'sunburst':
-                    ctx.fillStyle = COLORS.BLACK; ctx.fillRect(0,0,240,240);
-                    ctx.fillStyle = COLORS.ORANGE; ctx.beginPath(); ctx.arc(120, 120, 40, 0, Math.PI*2); ctx.fill();
-                    break;
-            }
+            animFrame++; updateEyesLogic();
+            if (currentExpression === 'dashboard') {
+                if (isSwitching) {
+                    drawBaseEyes(COLORS.BLACK);
+                    if (performance.now() - switchTimer > 5000) { isSwitching = false; moodLabel.textContent = "DASHBOARD OBD"; }
+                } else { drawDashboard(); }
+            } else if (currentExpression === 'myroboeyes') { drawBaseEyes(COLORS.BLACK); }
+            else if (currentExpression === 'kawaii') { drawBaseEyes(COLORS.BLACK, 'kawaii'); }
+            else if (currentExpression === 'cyclope') { drawBaseEyes(COLORS.BLACK, 'cyclope'); }
+            else if (currentExpression === 'robot') { ctx.fillStyle=COLORS.BLACK; ctx.fillRect(0,0,240,240); ctx.fillStyle=COLORS.CYAN; roundRect(ctx,60,100,40,12,4,true); roundRect(ctx,140,100,40,12,4,true); }
+            else if (currentExpression === 'sunburst') { ctx.fillStyle=COLORS.BLACK; ctx.fillRect(0,0,240,240); ctx.fillStyle=COLORS.ORANGE; ctx.beginPath(); ctx.arc(120,120,40,0,Math.PI*2); ctx.fill(); }
             requestAnimationFrame(animate);
         }
-        animate();
+        setExpression('dashboard'); animate();
     </script>
 </body>
 </html>
