@@ -57,30 +57,28 @@
         const LED_COLORS = { cold: 'radial-gradient(circle, rgba(0,210,255,0.8) 0%, rgba(58,123,213,0.4) 100%)', overheat: 'radial-gradient(circle, rgba(255,65,108,0.8) 0%, rgba(255,75,43,0.4) 100%)', start: 'radial-gradient(circle, rgba(86,171,47,0.8) 0%, rgba(168,224,99,0.4) 100%)', shocked: 'radial-gradient(circle, rgba(255,216,155,0.8) 0%, rgba(25,10,5,0.4) 100%)', dashboard: 'radial-gradient(circle, rgba(48,207,208,0.8) 0%, rgba(51,8,103,0.4) 100%)', myroboeyes: 'radial-gradient(circle, rgba(147,112,219,0.8) 0%, rgba(186,85,211,0.4) 100%)' };
         let my_eyeW=56, my_eyeH_Max=56, my_curLx=42, my_curLy=92, my_curLh=56, my_targetLx=42, my_targetLy=92, my_targetLh=56, my_currentMood = 0;
         let my_blinkTimer = performance.now()+2000, my_idleTimer = performance.now()+4000, my_moodTimer = performance.now()+4000;
-        let shakeX = 0, shakeY = 0;
+        let shakeX = 0, shakeY = 0; let isRoundEye = false;
 
         function updateEyesLogic() {
             const now = performance.now();
-            let blinkSpeed = 0.20;
-            let moveSpeed = 0.20;
-            shakeX = 0; shakeY = 0;
+            let blinkSpeed = 0.20; let moveSpeed = 0.20;
+            shakeX = 0; shakeY = 0; isRoundEye = false;
             
             if (currentExpression === 'start') {
                 let cycle = (now - switchTimer) % 3000; 
                 if (cycle < 1000) my_targetLx = 25; else if (cycle < 2000) my_targetLx = 65; else my_targetLx = 42;
-                my_targetLy = 92; my_targetLh = 56;
-                moveSpeed = 0.15;
+                my_targetLy = 92; my_targetLh = 56; moveSpeed = 0.15;
             } else if (currentExpression === 'shocked') {
-                let stage = (now - switchTimer) % 2000; // Cycle plus rapide
-                if (stage < 400) { my_targetLh = 56; }
-                else if (stage < 600) { my_targetLh = 0; }
-                else if (stage < 1400) { my_targetLh = 4; } // Plat (-_-)
-                else if (stage < 1600) { my_targetLh = 0; }
-                else { my_targetLh = 56; }
-                my_targetLx = 42; my_targetLy = 92;
-                blinkSpeed = 0.9; // Presque instantané
-                shakeX = (Math.random() - 0.5) * 6; // Gros tremblement
-                shakeY = (Math.random() - 0.5) * 6;
+                let time = (now - switchTimer) % 3000;
+                if (time < 1500) { // Phase Panique : Gauche/Droite + Blink rapide
+                    my_targetLx = (time % 400 < 200) ? 15 : 75;
+                    my_targetLh = (time % 200 < 100) ? 0 : 56;
+                    blinkSpeed = 0.9; moveSpeed = 0.8;
+                    shakeX = (Math.random()-0.5)*5; shakeY = (Math.random()-0.5)*5;
+                } else { // Phase Choc : Centre + Grands ronds
+                    my_targetLx = 42; my_targetLy = 92; my_targetLh = 65;
+                    isRoundEye = true; blinkSpeed = 0.4; moveSpeed = 0.4;
+                }
             } else {
                 if (now > my_moodTimer && (currentExpression==='dashboard'||currentExpression==='myroboeyes')) { my_currentMood = (my_currentMood+1)%4; my_moodTimer = now+4000; }
                 if (now > my_blinkTimer) { my_targetLh = 0; my_blinkTimer = now+Math.random()*3000+2000; }
@@ -91,7 +89,6 @@
             my_curLx += (my_targetLx - my_curLx) * moveSpeed;
             my_curLy += (my_targetLy - my_curLy) * moveSpeed;
             my_curLh += (my_targetLh - my_curLh) * blinkSpeed;
-            
             if (my_curLh < 1.0 && currentExpression !== 'shocked') my_targetLh = 56;
         }
 
@@ -103,21 +100,20 @@
 
             let ox = (mode === 'shocked' ? shakeX : 0);
             let oy = (mode === 'shocked' ? shakeY : 0);
+            if (isRoundEye) { drawW = drawH; drawRadius = drawH/2; }
 
-            if (my_curLh < 12) { 
-                drawW=64; drawH=Math.max(2, Math.floor(my_curLh/2)); 
-                drawRadius=3; finalY=Math.floor(my_curLy+25) + oy; 
-                xL=Math.floor(my_curLx-4) + ox; xR=xL+88; 
+            if (my_curLh < 12 && !isRoundEye) { 
+                drawW=64; drawH=Math.max(2, Math.floor(my_curLh/2)); drawRadius=3; 
+                finalY=Math.floor(my_curLy+25) + oy; xL=Math.floor(my_curLx-4) + ox; xR=xL+88; 
             } else { 
-                finalY=Math.floor(my_curLy+(56-drawH)/2) + oy; 
-                xL=Math.floor(my_curLx) + ox; xR=xL+80; 
+                finalY=Math.floor(my_curLy+(56-drawH)/2) + oy; xL=Math.floor(my_curLx) + ox; xR=xL+80; 
             }
             
             ctx.fillStyle = COLORS.WHITE;
             roundRect(ctx, xL, finalY, drawW, drawH, drawRadius, true);
             roundRect(ctx, xR, finalY, drawW, drawH, drawRadius, true);
             
-            if (my_curLh >= 12) {
+            if (my_curLh >= 12 && !isRoundEye) {
                 let mH = drawH/2;
                 if (currentMoodToDraw===2) { fillTriangle(ctx,xL,finalY,xL+drawW,finalY,xL+drawW,finalY+mH,bgColor); fillTriangle(ctx,xR,finalY,xR+drawW,finalY,xR,finalY+mH,bgColor); }
                 else if (currentMoodToDraw===1) { fillTriangle(ctx,xL,finalY,xL+drawW,finalY,xL,finalY+mH,bgColor); fillTriangle(ctx,xR,finalY,xR+drawW,finalY,xR+drawW,finalY+mH,bgColor); }
