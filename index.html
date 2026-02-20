@@ -196,7 +196,7 @@
             myroboeyes: 'radial-gradient(circle, rgba(147,112,219,0.8) 0%, rgba(186,85,211,0.4) 100%)'
         };
 
-        // --- LOGIQUE YEUX (COMMUNE) ---
+        // --- LOGIQUE YEUX (Fidèle à ton code RoboEyes) ---
         let my_eyeW=56, my_eyeH_Max=56, my_borderRadius=16, my_spaceBetween=24, my_blinkThreshold=12.0;
         let my_curLx=42, my_curLy=92, my_curLh=56;
         let my_targetLx=42, my_targetLy=92, my_targetLh=56;
@@ -234,13 +234,14 @@
                     fillTriangle(ctx,xL,finalY,xL+56,finalY,xL,finalY+mH,bgColor);
                     fillTriangle(ctx,xR,finalY,xR+56,finalY,xR+56,finalY+mH,bgColor);
                 } else if (my_currentMood===3) { // HAPPY
-                    roundRect(ctx,xL-2,finalY+mH,60,56,16,true,bgColor);
-                    roundRect(ctx,xR-2,finalY+mH,60,56,16,true,bgColor);
+                    ctx.fillStyle = bgColor;
+                    roundRect(ctx,xL-2,finalY+mH,60,56,16,true);
+                    roundRect(ctx,xR-2,finalY+mH,60,56,16,true);
                 }
             }
         }
 
-        // --- DASHBOARD LOGIC (FIDELE AU NOUVEAU CODE) ---
+        // --- DASHBOARD LOGIC (Fidèle au nouveau code RoboOBD) ---
         function getSpeedColor(spd) {
             if (spd < 40) return COLORS.BLUE;
             if (spd < 80) return COLORS.YELLOW;
@@ -248,7 +249,7 @@
         }
         function getRPMColor(rpm) {
             if (rpm < 2000) return COLORS.YELLOW;
-            if (rpm < 4000) return '#FFA500'; // Orange
+            if (rpm < 4000) return COLORS.ORANGE;
             return COLORS.RED;
         }
 
@@ -263,51 +264,30 @@
         }
 
         function drawDashboard() {
-            // 1. Yeux en arrière-plan (plus sombres)
             drawEyesToCanvas(COLORS.BG_DARK_BLUE);
             
-            // 2. Simulation de données OBD fluctuantes
             const spd = Math.floor(80 + Math.sin(animFrame * 0.05) * 40);
             const rpm = Math.floor(3000 + Math.sin(animFrame * 0.03) * 2000);
             const tmp = Math.floor(90 + Math.sin(animFrame * 0.01) * 5);
-
             const START_ANGLE = 60;
             
-            // 3. Rails fixes (V_DARK)
             drawArc(120, 120, 115, 100, START_ANGLE, START_ANGLE + 240, COLORS.V_DARK);
             drawArc(120, 120, 95, 85, START_ANGLE, START_ANGLE + 240, COLORS.V_DARK);
 
-            // 4. Arcs dynamiques
             let endAngleSpd = START_ANGLE + (spd / 240.0) * 240.0;
             drawArc(120, 120, 115, 100, START_ANGLE, endAngleSpd, getSpeedColor(spd));
-            
             let endAngleRpm = START_ANGLE + (rpm / 8000.0) * 240.0;
             drawArc(120, 120, 95, 85, START_ANGLE, endAngleRpm, getRPMColor(rpm));
 
-            // 5. Textes (Positions et tailles fidèles)
             ctx.textAlign = 'center';
-            
-            // Température
-            ctx.fillStyle = COLORS.CYAN;
-            ctx.font = 'bold 30px Arial';
-            ctx.fillText(tmp, 120, 80);
-            ctx.font = '12px Arial';
-            ctx.fillText('C', 155, 75);
-
-            // RPM
-            ctx.fillStyle = COLORS.WHITE;
-            ctx.font = 'bold 50px Arial';
-            ctx.fillText(rpm, 120, 135);
-
-            // Vitesse
-            ctx.fillStyle = COLORS.YELLOW;
-            ctx.font = 'bold 40px Arial';
-            ctx.fillText(spd, 120, 195);
-            ctx.font = '14px Arial';
-            ctx.fillText('km/h', 165, 195);
+            ctx.fillStyle = COLORS.CYAN; ctx.font = 'bold 30px Arial'; ctx.fillText(tmp, 120, 80);
+            ctx.font = '12px Arial'; ctx.fillText('C', 155, 75);
+            ctx.fillStyle = COLORS.WHITE; ctx.font = 'bold 50px Arial'; ctx.fillText(rpm, 120, 135);
+            ctx.fillStyle = COLORS.YELLOW; ctx.font = 'bold 40px Arial'; ctx.fillText(spd, 120, 195);
+            ctx.font = '14px Arial'; ctx.fillText('km/h', 165, 195);
         }
 
-        // --- HELPERS DESSIN ---
+        // --- HELPERS & ANIMATION ---
         function setExpression(expr) {
             currentExpression = expr;
             animFrame = 0;
@@ -315,26 +295,31 @@
             moodLabel.textContent = (expr === 'dashboard') ? "Mode: DASHBOARD OBD" : `Expression: ${expr.toUpperCase()}`;
         }
 
+        function roundRect(ctx, x, y, width, height, radius, fill) {
+            ctx.beginPath(); ctx.moveTo(x + radius, y); ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius); ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height); ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius); ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y); ctx.closePath();
+            if (fill) ctx.fill(); else ctx.stroke();
+        }
+
         function fillTriangle(ctx, x1, y1, x2, y2, x3, y3, color) {
-            ctx.fillStyle = color;
-            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo(x3, y3);
-            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo(x3, y3); ctx.closePath(); ctx.fill();
         }
 
         function animate() {
             animFrame++;
             updateEyesLogic();
-            
             switch(currentExpression) {
                 case 'dashboard': drawDashboard(); break;
                 case 'myroboeyes': drawEyesToCanvas(); break;
-                case 'kawaii': // Simulation Kawaii rapide
-                    drawEyesToCanvas();
-                    ctx.fillStyle = COLORS.BLACK;
+                case 'kawaii': 
+                    drawEyesToCanvas(); ctx.fillStyle = COLORS.BLACK;
                     ctx.beginPath(); ctx.arc(my_curLx+28, my_curLy+28, 15, 0, Math.PI*2); ctx.fill();
                     ctx.beginPath(); ctx.arc(my_curLx+108, my_curLy+28, 15, 0, Math.PI*2); ctx.fill();
                     break;
-                case 'cyclope': // Style cyclope simplifié
+                case 'cyclope':
                     ctx.fillStyle = COLORS.BLACK; ctx.fillRect(0,0,240,240);
                     ctx.fillStyle = COLORS.YELLOW; ctx.beginPath(); ctx.arc(120, 120, 60 + Math.sin(animFrame*0.1)*5, 0, Math.PI*2); ctx.fill();
                     break;
@@ -349,7 +334,6 @@
             }
             requestAnimationFrame(animate);
         }
-
         animate();
     </script>
 </body>
