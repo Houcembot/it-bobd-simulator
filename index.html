@@ -53,7 +53,7 @@
                 <button id="btn-kawaii" onclick="setExpression('kawaii')">😊 Kawaii</button>
                 <button id="btn-cyclope" onclick="setExpression('cyclope')">👁️ Cyclope</button>
                 <button id="btn-robot" onclick="setExpression('robot')">🤖 Robot</button>
-                <button id="btn-cold" onclick="setExpression('cold')">🧊 Glacé (Amélioré)</button>
+                <button id="btn-cold" onclick="setExpression('cold')">❄️ Glacé (Nouveau)</button>
             </div>
         </div>
     </div>
@@ -66,13 +66,13 @@
         let animFrame = 0; let switchTimer = 0; let isSwitching = true;
         const COLORS = {
             BLACK: '#000000', WHITE: '#FFFFFF', CREAM: '#FFF8DC', YELLOW: '#FFD700', CYAN: '#00FFFF', MAGENTA: '#FF00FF',
-            BLUE: '#0000FF', GREEN: '#00FF00', ORANGE: '#FFA500', RED: '#FF0000', BG_DARK_BLUE: '#000005', V_DARK: '#010110', ICE_BLUE: '#A5F2F3', GLASS: 'rgba(165, 242, 243, 0.4)'
+            BLUE: '#0000FF', GREEN: '#00FF00', ORANGE: '#FFA500', RED: '#FF0000', BG_DARK_BLUE: '#000005', V_DARK: '#010110', ICE_BLUE: '#A5F2F3'
         };
         const LED_COLORS = {
             kawaii: 'radial-gradient(circle, rgba(102,126,234,0.8) 0%, rgba(118,75,162,0.4) 100%)',
             cyclope: 'radial-gradient(circle, rgba(255,105,180,0.8) 0%, rgba(255,20,147,0.4) 100%)',
             robot: 'radial-gradient(circle, rgba(79,172,254,0.8) 0%, rgba(0,242,254,0.4) 100%)',
-            cold: 'radial-gradient(circle, rgba(165,242,243,0.9) 0%, rgba(58,123,213,0.5) 100%)',
+            cold: 'radial-gradient(circle, rgba(165,242,243,0.8) 0%, rgba(58,123,213,0.4) 100%)',
             dashboard: 'radial-gradient(circle, rgba(48,207,208,0.8) 0%, rgba(51,8,103,0.4) 100%)',
             myroboeyes: 'radial-gradient(circle, rgba(147,112,219,0.8) 0%, rgba(186,85,211,0.4) 100%)'
         };
@@ -95,62 +95,42 @@
         function drawBaseEyes(bgColor, mode = 'normal', offX = 0, offY = 0) {
             ctx.fillStyle = bgColor; ctx.fillRect(0, 0, 240, 240);
             let drawW, drawH, drawRadius, finalY, xL, xR;
-            
-            // Yeux plus petits pour le mode COLD
-            let sizeMult = (mode === 'cold' ? 0.7 : 1.0);
-            let currentEyeW = my_eyeW * sizeMult;
-            let currentEyeH_Max = my_eyeH_Max * sizeMult;
-
             if (mode === 'cyclope') {
                 drawW=70; drawH= (my_curLh < 12) ? 8 : Math.floor(my_curLh * 1.2);
                 drawRadius=35; finalY=120-drawH/2 + offY; xL=120-drawW/2 + offX;
                 ctx.fillStyle = COLORS.WHITE; roundRect(ctx, xL, finalY, drawW, drawH, drawRadius, true);
                 return;
             }
-
-            if (my_curLh < 12) { drawW=64 * sizeMult; drawH=6 * sizeMult; drawRadius=3; finalY=Math.floor(my_curLy+25) + offY; xL=Math.floor(my_curLx-4) + offX; xR=xL+(88*sizeMult); }
-            else { 
-                drawW = currentEyeW; drawH = Math.floor(my_curLh * sizeMult); drawRadius = (mode==='kawaii'?drawW/2:16*sizeMult); 
-                finalY = Math.floor(my_curLy+(currentEyeH_Max-drawH)/2) + offY; 
-                xL = Math.floor(my_curLx) + offX; xR = xL + (80 * sizeMult); 
-            }
-            
+            if (my_curLh < 12) { drawW=64; drawH=6; drawRadius=3; finalY=Math.floor(my_curLy+25) + offY; xL=Math.floor(my_curLx-4) + offX; xR=xL+88; }
+            else { drawW=56; drawH=Math.floor(my_curLh); drawRadius=(mode==='kawaii'?28:16); finalY=Math.floor(my_curLy+(56-drawH)/2) + offY; xL=Math.floor(my_curLx) + offX; xR=xL+80; }
             ctx.fillStyle = COLORS.WHITE;
             roundRect(ctx, xL, finalY, drawW, drawH, drawRadius, true); roundRect(ctx, xR, finalY, drawW, drawH, drawRadius, true);
-            
-            if (my_curLh >= 12 && mode!=='cold') {
+            if (my_curLh >= 12) {
                 let mH = drawH/2;
-                if (my_currentMood===2) { fillTriangle(ctx,xL,finalY,xL+drawW,finalY,xL+drawW,finalY+mH,bgColor); fillTriangle(ctx,xR,finalY,xR+drawW,finalY,xR,finalY+mH,bgColor); }
-                else if (my_currentMood===1) { fillTriangle(ctx,xL,finalY,xL+drawW,finalY,xL,finalY+mH,bgColor); fillTriangle(ctx,xR,finalY,xR+drawW,finalY,xR+drawW,finalY+mH,bgColor); }
-                else if (my_currentMood===3) { ctx.fillStyle = bgColor; roundRect(ctx,xL-2,finalY+mH,drawW+4,60,16,true); roundRect(ctx,xR-2,finalY+mH,drawW+4,60,16,true); }
+                if (my_currentMood===2 && mode!=='cold') { fillTriangle(ctx,xL,finalY,xL+drawW,finalY,xL+drawW,finalY+mH,bgColor); fillTriangle(ctx,xR,finalY,xR+drawW,finalY,xR,finalY+mH,bgColor); }
+                else if (my_currentMood===1 && mode!=='cold') { fillTriangle(ctx,xL,finalY,xL+drawW,finalY,xL,finalY+mH,bgColor); fillTriangle(ctx,xR,finalY,xR+drawW,finalY,xR+drawW,finalY+mH,bgColor); }
+                else if (my_currentMood===3 && mode!=='cold') { ctx.fillStyle = bgColor; roundRect(ctx,xL-2,finalY+mH,drawW+4,60,16,true); roundRect(ctx,xR-2,finalY+mH,drawW+4,60,16,true); }
             }
-        }
-
-        function drawIce(x, y, size) {
-            ctx.fillStyle = 'rgba(165, 242, 243, 0.6)';
-            ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x+size, y-size/2); ctx.lineTo(x+size/2, y+size); ctx.closePath(); ctx.fill();
-            ctx.strokeStyle = 'white'; ctx.lineWidth = 1; ctx.stroke();
         }
 
         function drawColdExpression() {
-            let shiverX = (Math.random() - 0.5) * 4;
-            let shiverY = (Math.random() - 0.5) * 4;
+            let shiverX = (Math.random() - 0.5) * 3;
+            let shiverY = (Math.random() - 0.5) * 3;
             drawBaseEyes('#001529', 'cold', shiverX, shiverY);
-            
-            // Glaçons sur les bords
-            drawIce(20, 20, 30); drawIce(200, 30, 25); drawIce(40, 200, 35); drawIce(180, 210, 20);
-            
             // Dents serrées
-            let mouthW = 60, mouthH = 20;
+            let mouthW = 80, mouthH = 30;
             let mx = 120 - mouthW/2 + shiverX;
-            let my = 160 + shiverY;
+            let my = 170 + shiverY;
             ctx.fillStyle = COLORS.WHITE;
-            roundRect(ctx, mx, my, mouthW, mouthH, 4, true);
-            ctx.strokeStyle = '#CCCCCC'; ctx.lineWidth = 1;
+            roundRect(ctx, mx, my, mouthW, mouthH, 5, true);
+            ctx.strokeStyle = '#CCCCCC'; ctx.lineWidth = 2;
             for(let i=1; i<6; i++) {
                 ctx.beginPath(); ctx.moveTo(mx + (mouthW/6)*i, my); ctx.lineTo(mx + (mouthW/6)*i, my + mouthH); ctx.stroke();
             }
             ctx.beginPath(); ctx.moveTo(mx, my + mouthH/2); ctx.lineTo(mx + mouthW, my + mouthH/2); ctx.stroke();
+            // Effet glace simple
+            ctx.fillStyle = 'rgba(165, 242, 243, 0.2)';
+            ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(40,0); ctx.lineTo(0,40); ctx.fill();
         }
 
         function drawDashboard() {
@@ -168,8 +148,7 @@
 
         function drawArc(x, y, r, innerR, startAngle, endAngle, color) {
             ctx.beginPath(); let sa = (startAngle + 90) * Math.PI / 180; let ea = (endAngle + 90) * Math.PI / 180;
-            ctx.arc(x, y, r, sa, ea); ctx.arc(x, y, innerR, ea, sa, true);
-            ctx.fillStyle = color; ctx.fill();
+            ctx.arc(x, y, r, sa, ea); ctx.arc(x, y, innerR, ea, sa, true); ctx.fillStyle = color; ctx.fill();
         }
 
         function setExpression(expr) {
