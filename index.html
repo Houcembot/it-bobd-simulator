@@ -113,13 +113,12 @@
             transform: translateY(0);
         }
         
+        #btn-myroboeyes { background: linear-gradient(135deg, #9370DB 0%, #BA55D3 100%); color: white; }
+        #btn-dashboard { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color: white; }
         #btn-kawaii { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
         #btn-cyclope { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
         #btn-robot { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
         #btn-sunburst { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; }
-        #btn-dashboard { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color: white; }
-        #btn-myroboeyes { background: linear-gradient(135deg, #9370DB 0%, #BA55D3 100%); color: white; }
-        #btn-nikoscan { background: linear-gradient(135deg, #FF0000 0%, #8B0000 100%); color: white; }
         
         .info {
             margin-top: 20px;
@@ -128,10 +127,6 @@
             border-radius: 10px;
             font-size: 14px;
             line-height: 1.6;
-        }
-        
-        .info strong {
-            color: #4facfe;
         }
         
         #mood-label {
@@ -152,26 +147,25 @@
         <div id="screen-container">
             <div id="led-ring"></div>
             <canvas id="canvas" width="240" height="240"></canvas>
-            <div id="mood-label">Expression: MYROBOEYES</div>
+            <div id="mood-label">Mode: DASHBOARD OBD</div>
         </div>
         
         <div id="controls">
-            <h2>🎨 Expressions</h2>
+            <h2>🎨 Expressions & Modes</h2>
             <div class="btn-group">
-                <button id="btn-myroboeyes" onclick="setExpression('myroboeyes')">👀 Mon RoboEyes (Fidèle)</button>
-                <button id="btn-nikoscan" onclick="setExpression('nikoscan')">📡 Niko Scan (Nouveau)</button>
+                <button id="btn-dashboard" onclick="setExpression('dashboard')">📊 Dashboard OBD (Corrigé)</button>
+                <button id="btn-myroboeyes" onclick="setExpression('myroboeyes')">👀 Yeux Uniquement (Fidèle)</button>
                 <button id="btn-kawaii" onclick="setExpression('kawaii')">😊 Kawaii</button>
                 <button id="btn-cyclope" onclick="setExpression('cyclope')">👁️ Cyclope</button>
                 <button id="btn-robot" onclick="setExpression('robot')">🤖 Robot</button>
                 <button id="btn-sunburst" onclick="setExpression('sunburst')">✨ Réveil</button>
-                <button id="btn-dashboard" onclick="setExpression('dashboard')">📊 Dashboard</button>
             </div>
             
             <div class="info">
                 <strong>💡 Instructions :</strong><br>
-                • Clique sur une expression pour la tester<br>
-                • Observe les animations et couleurs LED<br>
-                • Une fois validées, je génère le code ESP32
+                • Ce simulateur est fidèle au code <strong>RoboOBD_Final</strong><br>
+                • Le mode Dashboard simule les arcs RPM/Vitesse réels<br>
+                • Les émotions changent en arrière-plan
             </div>
         </div>
     </div>
@@ -182,15 +176,15 @@
         const ledRing = document.getElementById('led-ring');
         const moodLabel = document.getElementById('mood-label');
         
-        let currentExpression = 'myroboeyes';
+        let currentExpression = 'dashboard';
         let animFrame = 0;
-        let startTime = performance.now();
+        let lastUpdateTime = performance.now();
         
         const COLORS = {
             BLACK: '#000000', WHITE: '#FFFFFF', CREAM: '#FFF8DC',
             YELLOW: '#FFD700', CYAN: '#00FFFF', MAGENTA: '#FF00FF',
-            BLUE: '#4169E1', PINK: '#FF69B4', ORANGE: '#FF8C00', VIOLET: '#9370DB',
-            DARK_RED: '#440000'
+            BLUE: '#0000FF', GREEN: '#00FF00', ORANGE: '#FFA500', RED: '#FF0000',
+            BG_DARK_BLUE: '#000005', V_DARK: '#010110'
         };
         
         const LED_COLORS = {
@@ -199,32 +193,126 @@
             robot: 'radial-gradient(circle, rgba(79,172,254,0.8) 0%, rgba(0,242,254,0.4) 100%)',
             sunburst: 'radial-gradient(circle, rgba(254,225,64,0.9) 0%, rgba(250,112,154,0.5) 100%)',
             dashboard: 'radial-gradient(circle, rgba(48,207,208,0.8) 0%, rgba(51,8,103,0.4) 100%)',
-            myroboeyes: 'radial-gradient(circle, rgba(147,112,219,0.8) 0%, rgba(186,85,211,0.4) 100%)',
-            nikoscan: 'radial-gradient(circle, rgba(255,0,0,0.9) 0%, rgba(139,0,0,0.4) 100%)'
+            myroboeyes: 'radial-gradient(circle, rgba(147,112,219,0.8) 0%, rgba(186,85,211,0.4) 100%)'
         };
-        
+
+        // --- LOGIQUE YEUX (COMMUNE) ---
+        let my_eyeW=56, my_eyeH_Max=56, my_borderRadius=16, my_spaceBetween=24, my_blinkThreshold=12.0;
+        let my_curLx=42, my_curLy=92, my_curLh=56;
+        let my_targetLx=42, my_targetLy=92, my_targetLh=56;
+        let my_currentMood = 0;
+        let my_blinkTimer = performance.now()+2000, my_idleTimer = performance.now()+4000, my_moodTimer = performance.now()+4000;
+
+        function updateEyesLogic() {
+            const now = performance.now();
+            if (now > my_moodTimer) { my_currentMood = (my_currentMood+1)%4; my_moodTimer = now+4000; }
+            if (now > my_blinkTimer) { my_targetLh = 0; my_blinkTimer = now+Math.random()*3000+2000; }
+            if (now > my_idleTimer) { my_targetLx = Math.random()*50+40; my_targetLy = Math.random()*35+70; my_idleTimer = now+Math.random()*4000+2000; }
+            const speed = (my_targetLh === 0 || my_curLh < 10) ? 0.40 : 0.20;
+            my_curLx += (my_targetLx - my_curLx) * 0.20; my_curLy += (my_targetLy - my_curLy) * 0.20; my_curLh += (my_targetLh - my_curLh) * speed;
+            if (my_curLh < 1.0) my_targetLh = 56;
+        }
+
+        function drawEyesToCanvas(bgColor = COLORS.BLACK) {
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, 240, 240);
+            
+            let drawW, drawH, drawRadius, finalY, xL, xR;
+            if (my_curLh < 12) { drawW=64; drawH=6; drawRadius=3; finalY=Math.floor(my_curLy+25); xL=Math.floor(my_curLx-4); xR=xL+88; }
+            else { drawW=56; drawH=Math.floor(my_curLh); drawRadius=16; finalY=Math.floor(my_curLy+(56-drawH)/2); xL=Math.floor(my_curLx); xR=xL+80; }
+            
+            ctx.fillStyle = COLORS.WHITE;
+            roundRect(ctx, xL, finalY, drawW, drawH, drawRadius, true);
+            roundRect(ctx, xR, finalY, drawW, drawH, drawRadius, true);
+            
+            if (my_curLh >= 12) {
+                let mH = drawH/2;
+                if (my_currentMood===2) { // ANGRY
+                    fillTriangle(ctx,xL,finalY,xL+56,finalY,xL+56,finalY+mH,bgColor);
+                    fillTriangle(ctx,xR,finalY,xR+56,finalY,xR,finalY+mH,bgColor);
+                } else if (my_currentMood===1) { // TIRED
+                    fillTriangle(ctx,xL,finalY,xL+56,finalY,xL,finalY+mH,bgColor);
+                    fillTriangle(ctx,xR,finalY,xR+56,finalY,xR+56,finalY+mH,bgColor);
+                } else if (my_currentMood===3) { // HAPPY
+                    roundRect(ctx,xL-2,finalY+mH,60,56,16,true,bgColor);
+                    roundRect(ctx,xR-2,finalY+mH,60,56,16,true,bgColor);
+                }
+            }
+        }
+
+        // --- DASHBOARD LOGIC (FIDELE AU NOUVEAU CODE) ---
+        function getSpeedColor(spd) {
+            if (spd < 40) return COLORS.BLUE;
+            if (spd < 80) return COLORS.YELLOW;
+            return COLORS.GREEN;
+        }
+        function getRPMColor(rpm) {
+            if (rpm < 2000) return COLORS.YELLOW;
+            if (rpm < 4000) return '#FFA500'; // Orange
+            return COLORS.RED;
+        }
+
+        function drawArc(x, y, r, innerR, startAngle, endAngle, color) {
+            ctx.beginPath();
+            let sa = (startAngle + 90) * Math.PI / 180;
+            let ea = (endAngle + 90) * Math.PI / 180;
+            ctx.arc(x, y, r, sa, ea);
+            ctx.arc(x, y, innerR, ea, sa, true);
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        function drawDashboard() {
+            // 1. Yeux en arrière-plan (plus sombres)
+            drawEyesToCanvas(COLORS.BG_DARK_BLUE);
+            
+            // 2. Simulation de données OBD fluctuantes
+            const spd = Math.floor(80 + Math.sin(animFrame * 0.05) * 40);
+            const rpm = Math.floor(3000 + Math.sin(animFrame * 0.03) * 2000);
+            const tmp = Math.floor(90 + Math.sin(animFrame * 0.01) * 5);
+
+            const START_ANGLE = 60;
+            
+            // 3. Rails fixes (V_DARK)
+            drawArc(120, 120, 115, 100, START_ANGLE, START_ANGLE + 240, COLORS.V_DARK);
+            drawArc(120, 120, 95, 85, START_ANGLE, START_ANGLE + 240, COLORS.V_DARK);
+
+            // 4. Arcs dynamiques
+            let endAngleSpd = START_ANGLE + (spd / 240.0) * 240.0;
+            drawArc(120, 120, 115, 100, START_ANGLE, endAngleSpd, getSpeedColor(spd));
+            
+            let endAngleRpm = START_ANGLE + (rpm / 8000.0) * 240.0;
+            drawArc(120, 120, 95, 85, START_ANGLE, endAngleRpm, getRPMColor(rpm));
+
+            // 5. Textes (Positions et tailles fidèles)
+            ctx.textAlign = 'center';
+            
+            // Température
+            ctx.fillStyle = COLORS.CYAN;
+            ctx.font = 'bold 30px Arial';
+            ctx.fillText(tmp, 120, 80);
+            ctx.font = '12px Arial';
+            ctx.fillText('C', 155, 75);
+
+            // RPM
+            ctx.fillStyle = COLORS.WHITE;
+            ctx.font = 'bold 50px Arial';
+            ctx.fillText(rpm, 120, 135);
+
+            // Vitesse
+            ctx.fillStyle = COLORS.YELLOW;
+            ctx.font = 'bold 40px Arial';
+            ctx.fillText(spd, 120, 195);
+            ctx.font = '14px Arial';
+            ctx.fillText('km/h', 165, 195);
+        }
+
+        // --- HELPERS DESSIN ---
         function setExpression(expr) {
             currentExpression = expr;
             animFrame = 0;
-            startTime = performance.now();
             ledRing.style.background = LED_COLORS[expr];
-            moodLabel.textContent = `Expression: ${expr.toUpperCase()}`;
-            if (expr === 'myroboeyes') initMyRoboEyes();
-        }
-        
-        function roundRect(ctx, x, y, width, height, radius, fill) {
-            ctx.beginPath();
-            ctx.moveTo(x + radius, y);
-            ctx.lineTo(x + width - radius, y);
-            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-            ctx.lineTo(x + width, y + height - radius);
-            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-            ctx.lineTo(x + radius, y + height);
-            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-            ctx.lineTo(x, y + radius);
-            ctx.quadraticCurveTo(x, y, x + radius, y);
-            ctx.closePath();
-            if (fill) ctx.fill(); else ctx.stroke();
+            moodLabel.textContent = (expr === 'dashboard') ? "Mode: DASHBOARD OBD" : `Expression: ${expr.toUpperCase()}`;
         }
 
         function fillTriangle(ctx, x1, y1, x2, y2, x3, y3, color) {
@@ -233,165 +321,36 @@
             ctx.closePath(); ctx.fill();
         }
 
-        // --- EXPRESSIONS ---
-        function drawKawaii() {
-            ctx.fillStyle = COLORS.BLACK; ctx.fillRect(0, 0, 240, 240);
-            const blink = Math.sin(animFrame * 0.05) > 0.95;
-            const eyeH = blink ? 8 : 56; const eyeW = 56; const eyeY = 120 - eyeH / 2;
-            ctx.fillStyle = COLORS.CREAM;
-            if (blink) { roundRect(ctx, 50, eyeY, eyeW, eyeH, 3, true); roundRect(ctx, 134, eyeY, eyeW, eyeH, 3, true); }
-            else { 
-                ctx.beginPath(); ctx.arc(50+eyeW/2, 120, eyeW/2, 0, Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.arc(134+eyeW/2, 120, eyeW/2, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = COLORS.BLACK;
-                ctx.beginPath(); ctx.arc(50+eyeW/2, 120, 15, 0, Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.arc(134+eyeW/2, 120, 15, 0, Math.PI*2); ctx.fill();
-            }
-        }
-
-        function drawCyclope() {
-            ctx.fillStyle = COLORS.BLACK; ctx.fillRect(0, 0, 240, 240);
-            const pulse = Math.sin(animFrame * 0.08) * 5; const radius = 60 + pulse;
-            const grad = ctx.createRadialGradient(120, 120, 0, 120, 120, radius);
-            grad.addColorStop(0, COLORS.YELLOW); grad.addColorStop(0.7, COLORS.CREAM); grad.addColorStop(1, COLORS.ORANGE);
-            ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(120, 120, radius, 0, Math.PI*2); ctx.fill();
-        }
-
-        function drawRobot() {
-            ctx.fillStyle = COLORS.BLACK; ctx.fillRect(0, 0, 240, 240);
-            ctx.fillStyle = COLORS.CYAN; roundRect(ctx, 60, 100, 40, 12, 4, true); roundRect(ctx, 140, 100, 40, 12, 4, true);
-            for (let i = 0; i < 5; i++) {
-                const h = 10 + Math.sin(animFrame * 0.1 + i) * 8;
-                roundRect(ctx, 20+i*6, 120-h/2, 4, h, 2, true); roundRect(ctx, 210+i*6, 120-h/2, 4, h, 2, true);
-            }
-            ctx.strokeStyle = COLORS.CYAN; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(90, 150); ctx.lineTo(150, 150); ctx.stroke();
-        }
-
-        function drawSunburst() {
-            ctx.fillStyle = COLORS.BLACK; ctx.fillRect(0, 0, 240, 240);
-            const grad = ctx.createRadialGradient(120, 120, 0, 120, 120, 40);
-            grad.addColorStop(0, COLORS.YELLOW); grad.addColorStop(1, COLORS.ORANGE);
-            ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(120, 120, 40, 0, Math.PI*2); ctx.fill();
-            for (let i = 0; i < 16; i++) {
-                const angle = (Math.PI*2/16)*i + animFrame*0.02;
-                const endR = 70 + Math.sin(animFrame*0.1 + i)*8;
-                ctx.strokeStyle = COLORS.YELLOW; ctx.lineWidth = 4;
-                ctx.beginPath(); ctx.moveTo(120+Math.cos(angle)*45, 120+Math.sin(angle)*45);
-                ctx.lineTo(120+Math.cos(angle)*endR, 120+Math.sin(angle)*endR); ctx.stroke();
-            }
-        }
-
-        function drawDashboard() {
-            ctx.fillStyle = '#001a33'; ctx.fillRect(0, 0, 240, 240);
-            ctx.fillStyle = COLORS.CYAN; ctx.font = 'bold 20px monospace'; ctx.textAlign = 'center'; ctx.fillText('STATS', 120, 40);
-            ctx.fillStyle = COLORS.YELLOW; ctx.font = 'bold 48px monospace'; ctx.fillText('70', 120, 100);
-            ctx.font = '14px monospace'; ctx.fillText('km/h', 120, 120);
-        }
-
-        // --- NOUVELLE ANIMATION NIKO SCAN ---
-        function drawNikoScan() {
-            ctx.fillStyle = COLORS.BLACK;
-            ctx.fillRect(0, 0, 240, 240);
-
-            // 1. Grille de fond circulaire
-            ctx.strokeStyle = '#220000';
-            ctx.lineWidth = 1;
-            for(let i=0; i<10; i++) {
-                ctx.beginPath();
-                ctx.arc(120, 120, i * 20 + (animFrame % 20), 0, Math.PI*2);
-                ctx.stroke();
-            }
-
-            // 2. Rayons rotatifs Niko style
-            const numRays = 24;
-            const rotation = animFrame * 0.03;
-            for (let i = 0; i < numRays; i++) {
-                const angle = (Math.PI * 2 / numRays) * i + rotation;
-                const alpha = (Math.sin(animFrame * 0.05 + i * 0.5) + 1) / 2;
-                ctx.strokeStyle = `rgba(255, 0, 0, ${alpha * 0.6})`;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(120 + Math.cos(angle) * 50, 120 + Math.sin(angle) * 50);
-                ctx.lineTo(120 + Math.cos(angle) * 110, 120 + Math.sin(angle) * 110);
-                ctx.stroke();
-            }
-
-            // 3. Cercle central (Cœur)
-            const pulse = Math.sin(animFrame * 0.1) * 3;
-            const grad = ctx.createRadialGradient(120, 120, 0, 120, 120, 45 + pulse);
-            grad.addColorStop(0, '#FF3333');
-            grad.addColorStop(0.5, '#990000');
-            grad.addColorStop(1, COLORS.BLACK);
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(120, 120, 45 + pulse, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 4. Info Vitesse au centre
-            ctx.fillStyle = COLORS.WHITE;
-            ctx.font = 'bold 24px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('104', 120, 125);
-            ctx.font = '10px Arial';
-            ctx.fillText('km/h', 120, 140);
-            
-            // 5. Cercle de scan rotatif
-            ctx.strokeStyle = '#FF0000';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(120, 120, 100, rotation, rotation + 1);
-            ctx.stroke();
-        }
-
-        // --- MON ROBOEYES LOGIC ---
-        let my_eyeW=56, my_eyeH_Max=56, my_borderRadius=16, my_spaceBetween=24, my_blinkThickness=6, my_blinkWidth=64, my_blinkThreshold=12.0;
-        let my_curLx, my_curLy, my_curLh, my_targetLx, my_targetLy, my_targetLh;
-        let my_currentMood = 0; let my_lastUpdateTime = 0; let my_blinkTimer = 0, my_idleTimer = 0, my_moodTimer = 0;
-
-        function initMyRoboEyes() {
-            my_targetLh=56; my_targetLx=42; my_targetLy=92;
-            my_curLx=my_targetLx; my_curLy=my_targetLy; my_curLh=56;
-            my_blinkTimer=performance.now()+2000; my_idleTimer=performance.now()+4000; my_moodTimer=performance.now()+4000;
-        }
-
-        function drawMyRoboEyes() {
-            const now = performance.now();
-            if (now - my_lastUpdateTime >= 16) {
-                my_lastUpdateTime = now;
-                if (now > my_moodTimer) { my_currentMood = (my_currentMood+1)%4; my_moodTimer = now+4000; }
-                if (now > my_blinkTimer) { my_targetLh = 0; my_blinkTimer = now+Math.random()*3000+2000; }
-                if (now > my_idleTimer) { my_targetLx = Math.random()*50+40; my_targetLy = Math.random()*35+70; my_idleTimer = now+Math.random()*4000+2000; }
-                const speed = (my_targetLh === 0 || my_curLh < 10) ? 0.40 : 0.20;
-                my_curLx += (my_targetLx - my_curLx) * 0.20; my_curLy += (my_targetLy - my_curLy) * 0.20; my_curLh += (my_targetLh - my_curLh) * speed;
-                if (my_curLh < 1.0) my_targetLh = 56;
-            }
-            ctx.fillStyle = COLORS.BLACK; ctx.fillRect(0, 0, 240, 240);
-            let drawW, drawH, drawRadius, finalY, xL, xR;
-            if (my_curLh < 12) { drawW=64; drawH=6; drawRadius=3; finalY=Math.floor(my_curLy+25); xL=Math.floor(my_curLx-4); xR=xL+88; }
-            else { drawW=56; drawH=Math.floor(my_curLh); drawRadius=16; finalY=Math.floor(my_curLy+(56-drawH)/2); xL=Math.floor(my_curLx); xR=xL+80; }
-            ctx.fillStyle = COLORS.WHITE; roundRect(ctx, xL, finalY, drawW, drawH, drawRadius, true); roundRect(ctx, xR, finalY, drawW, drawH, drawRadius, true);
-            if (my_curLh >= 12) {
-                let mH = drawH/2;
-                if (my_currentMood===2) { fillTriangle(ctx,xL,finalY,xL+56,finalY,xL+56,finalY+mH,COLORS.BLACK); fillTriangle(ctx,xR,finalY,xR+56,finalY,xR,finalY+mH,COLORS.BLACK); }
-                else if (my_currentMood===1) { fillTriangle(ctx,xL,finalY,xL+56,finalY,xL,finalY+mH,COLORS.BLACK); fillTriangle(ctx,xR,finalY,xR+56,finalY,xR+56,finalY+mH,COLORS.BLACK); }
-                else if (my_currentMood===3) { roundRect(ctx,xL-2,finalY+mH,60,56,16,true,COLORS.BLACK); roundRect(ctx,xR-2,finalY+mH,60,56,16,true,COLORS.BLACK); }
-            }
-        }
-
         function animate() {
             animFrame++;
+            updateEyesLogic();
+            
             switch(currentExpression) {
-                case 'kawaii': drawKawaii(); break;
-                case 'cyclope': drawCyclope(); break;
-                case 'robot': drawRobot(); break;
-                case 'sunburst': drawSunburst(); break;
                 case 'dashboard': drawDashboard(); break;
-                case 'myroboeyes': drawMyRoboEyes(); break;
-                case 'nikoscan': drawNikoScan(); break;
+                case 'myroboeyes': drawEyesToCanvas(); break;
+                case 'kawaii': // Simulation Kawaii rapide
+                    drawEyesToCanvas();
+                    ctx.fillStyle = COLORS.BLACK;
+                    ctx.beginPath(); ctx.arc(my_curLx+28, my_curLy+28, 15, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(my_curLx+108, my_curLy+28, 15, 0, Math.PI*2); ctx.fill();
+                    break;
+                case 'cyclope': // Style cyclope simplifié
+                    ctx.fillStyle = COLORS.BLACK; ctx.fillRect(0,0,240,240);
+                    ctx.fillStyle = COLORS.YELLOW; ctx.beginPath(); ctx.arc(120, 120, 60 + Math.sin(animFrame*0.1)*5, 0, Math.PI*2); ctx.fill();
+                    break;
+                case 'robot':
+                    ctx.fillStyle = COLORS.BLACK; ctx.fillRect(0,0,240,240);
+                    ctx.fillStyle = COLORS.CYAN; roundRect(ctx, 60, 100, 40, 12, 4, true); roundRect(ctx, 140, 100, 40, 12, 4, true);
+                    break;
+                case 'sunburst':
+                    ctx.fillStyle = COLORS.BLACK; ctx.fillRect(0,0,240,240);
+                    ctx.fillStyle = COLORS.ORANGE; ctx.beginPath(); ctx.arc(120, 120, 40, 0, Math.PI*2); ctx.fill();
+                    break;
             }
             requestAnimationFrame(animate);
         }
-        initMyRoboEyes(); animate();
+
+        animate();
     </script>
 </body>
 </html>
