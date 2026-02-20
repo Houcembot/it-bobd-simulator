@@ -60,30 +60,30 @@
 
         function updateEyesLogic() {
             const now = performance.now();
-            let blinkSpeed = 0.65; // Blink ultra-rapide
-            let moveSpeed = 0.35; // Mouvement nerveux
+            let blinkSpeed = 0.20; // Vitesse par défaut
+            let moveSpeed = 0.20; // Vitesse par défaut
             
             if (currentExpression === 'start') {
-                let cycle = (now - switchTimer) % 2000; // Plus rapide
-                if (cycle < 600) my_targetLx = 15; // Gauche max
-                else if (cycle < 1200) my_targetLx = 75; // Droite max
+                let cycle = (now - switchTimer) % 3000; 
+                if (cycle < 1000) my_targetLx = 25; 
+                else if (cycle < 2000) my_targetLx = 65; 
                 else my_targetLx = 42;
                 my_targetLy = 92; my_targetLh = 56;
+                moveSpeed = 0.15; // Balayage plus "humain"
             } else if (currentExpression === 'shocked') {
-                let stage = (now - switchTimer) % 3000;
-                if (stage < 400) { my_targetLh = 56; }
-                else if (stage < 700) { my_targetLh = 0; }
-                else if (stage < 1800) { my_targetLh = 4; } // Yeux plats
-                else if (stage < 2100) { my_targetLh = 0; }
+                let stage = (now - switchTimer) % 2500; // Cycle court pour le bug
+                if (stage < 300) { my_targetLh = 56; }
+                else if (stage < 500) { my_targetLh = 0; }
+                else if (stage < 1500) { my_targetLh = 4; } // Plat (-_-)
+                else if (stage < 1700) { my_targetLh = 0; }
                 else { my_targetLh = 56; }
                 my_targetLx = 42; my_targetLy = 92;
-                blinkSpeed = 0.8; // Encore plus sec
+                blinkSpeed = 0.85; // TRÈS RAPIDE pour le bug
             } else {
                 if (now > my_moodTimer && (currentExpression==='dashboard'||currentExpression==='myroboeyes')) { my_currentMood = (my_currentMood+1)%4; my_moodTimer = now+4000; }
                 if (now > my_blinkTimer) { my_targetLh = 0; my_blinkTimer = now+Math.random()*3000+2000; }
                 if (now > my_idleTimer) { my_targetLx = Math.random()*50+40; my_targetLy = Math.random()*35+70; my_idleTimer = now+Math.random()*4000+2000; }
-                blinkSpeed = (my_targetLh === 0 || my_curLh < 10) ? 0.40 : 0.20;
-                moveSpeed = 0.20;
+                blinkSpeed = (my_targetLh === 0 || my_curLh < 10) ? 0.45 : 0.25;
             }
             
             my_curLx += (my_targetLx - my_curLx) * moveSpeed;
@@ -99,8 +99,15 @@
             let currentMoodToDraw = (mode === 'start' || mode === 'shocked') ? 0 : my_currentMood;
             if (mode === 'overheat') currentMoodToDraw = 2;
 
-            if (my_curLh < 12) { drawW=64; drawH=Math.max(2, Math.floor(my_curLh/2)); drawRadius=3; finalY=Math.floor(my_curLy+25); xL=Math.floor(my_curLx-4); xR=xL+88; }
-            else { finalY=Math.floor(my_curLy+(56-drawH)/2); xL=Math.floor(my_curLx); xR=xL+80; }
+            if (my_curLh < 12) { 
+                drawW=64; drawH=Math.max(2, Math.floor(my_curLh/2)); 
+                drawRadius=3; 
+                finalY=Math.floor(my_curLy+25); 
+                xL=Math.floor(my_curLx-4); xR=xL+88; 
+            } else { 
+                finalY=Math.floor(my_curLy+(56-drawH)/2); 
+                xL=Math.floor(my_curLx); xR=xL+80; 
+            }
             
             ctx.fillStyle = COLORS.WHITE;
             roundRect(ctx, xL, finalY, drawW, drawH, drawRadius, true);
