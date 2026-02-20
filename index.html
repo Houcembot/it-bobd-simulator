@@ -60,25 +60,36 @@
 
         function updateEyesLogic() {
             const now = performance.now();
+            let blinkSpeed = 0.65; // Blink ultra-rapide
+            let moveSpeed = 0.35; // Mouvement nerveux
+            
             if (currentExpression === 'start') {
-                let cycle = (now - switchTimer) % 3000;
-                if (cycle < 1000) my_targetLx = 20; else if (cycle < 2000) my_targetLx = 70; else my_targetLx = 42;
+                let cycle = (now - switchTimer) % 2000; // Plus rapide
+                if (cycle < 600) my_targetLx = 15; // Gauche max
+                else if (cycle < 1200) my_targetLx = 75; // Droite max
+                else my_targetLx = 42;
                 my_targetLy = 92; my_targetLh = 56;
             } else if (currentExpression === 'shocked') {
-                let stage = (now - switchTimer) % 4000;
-                if (stage < 800) { my_targetLh = 56; }
-                else if (stage < 1200) { my_targetLh = 0; }
-                else if (stage < 2500) { my_targetLh = 6; }
-                else if (stage < 3000) { my_targetLh = 0; }
+                let stage = (now - switchTimer) % 3000;
+                if (stage < 400) { my_targetLh = 56; }
+                else if (stage < 700) { my_targetLh = 0; }
+                else if (stage < 1800) { my_targetLh = 4; } // Yeux plats
+                else if (stage < 2100) { my_targetLh = 0; }
                 else { my_targetLh = 56; }
                 my_targetLx = 42; my_targetLy = 92;
+                blinkSpeed = 0.8; // Encore plus sec
             } else {
                 if (now > my_moodTimer && (currentExpression==='dashboard'||currentExpression==='myroboeyes')) { my_currentMood = (my_currentMood+1)%4; my_moodTimer = now+4000; }
                 if (now > my_blinkTimer) { my_targetLh = 0; my_blinkTimer = now+Math.random()*3000+2000; }
                 if (now > my_idleTimer) { my_targetLx = Math.random()*50+40; my_targetLy = Math.random()*35+70; my_idleTimer = now+Math.random()*4000+2000; }
+                blinkSpeed = (my_targetLh === 0 || my_curLh < 10) ? 0.40 : 0.20;
+                moveSpeed = 0.20;
             }
-            const speed = (my_targetLh === 0 || my_curLh < 10) ? 0.40 : 0.20;
-            my_curLx += (my_targetLx - my_curLx) * 0.20; my_curLy += (my_targetLy - my_curLy) * 0.20; my_curLh += (my_targetLh - my_curLh) * speed;
+            
+            my_curLx += (my_targetLx - my_curLx) * moveSpeed;
+            my_curLy += (my_targetLy - my_curLy) * moveSpeed;
+            my_curLh += (my_targetLh - my_curLh) * blinkSpeed;
+            
             if (my_curLh < 1.0 && currentExpression !== 'shocked') my_targetLh = 56;
         }
 
