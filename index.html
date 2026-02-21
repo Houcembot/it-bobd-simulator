@@ -20,8 +20,8 @@
         button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
         button:active { transform: translateY(0); }
         #btn-dashboard { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color: white; }
+        #btn-text { background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%); color: white; }
         #btn-myroboeyes { background: linear-gradient(135deg, #9370DB 0%, #BA55D3 100%); color: white; }
-        #btn-text { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; }
         #btn-cold { background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%); color: white; }
         #btn-overheat { background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); color: white; }
         #btn-shocked { background: linear-gradient(135deg, #ffd89b 0%, #190a05 100%); color: white; }
@@ -41,7 +41,7 @@
             <h2>⚙️ Expressions & Data</h2>
             <div class="btn-group">
                 <button id="btn-dashboard" class="btn-full" onclick="setExpression('dashboard')">📊 Dashboard OBD</button>
-                <button id="btn-text" class="btn-full" onclick="setExpression('text')">📟 Animation Text (Matrix)</button>
+                <button id="btn-text" class="btn-full" onclick="setExpression('text')">📟 Animation Text (Logs)</button>
                 <button id="btn-myroboeyes" class="btn-full" onclick="setExpression('myroboeyes')">👀 Yeux Uniquement</button>
                 <button id="btn-cold" onclick="setExpression('cold')">🥶 Moteur Froid</button>
                 <button id="btn-overheat" onclick="setExpression('overheat')">🥵 Surchauffe</button>
@@ -54,16 +54,17 @@
         const ledRing = document.getElementById('led-ring'); const moodLabel = document.getElementById('mood-label');
         let currentExpression = 'dashboard'; let animFrame = 0; let switchTimer = 0; let isSwitching = true;
         
-        const COLORS = { BLACK: '#000000', WHITE: '#FFFFFF', CREAM: '#FFF8DC', YELLOW: '#FFD700', CYAN: '#00FFFF', MATRIX: '#00FF41', DARK_GREEN: '#003B00', RED: '#FF0000', BG_DARK_BLUE: '#000005', V_DARK: '#010110' };
-        const LED_COLORS = { text: 'radial-gradient(circle, #00FF41 0%, #003B00 100%)', cold: 'radial-gradient(circle, rgba(0,210,255,0.8) 0%, rgba(58,123,213,0.4) 100%)', overheat: 'radial-gradient(circle, rgba(255,65,108,0.8) 0%, rgba(255,75,43,0.4) 100%)', dashboard: 'radial-gradient(circle, rgba(48,207,208,0.8) 0%, rgba(51,8,103,0.4) 100%)', myroboeyes: 'radial-gradient(circle, rgba(147,112,219,0.8) 0%, rgba(186,85,211,0.4) 100%)' };
+        const COLORS = { BLACK: '#000000', WHITE: '#FFFFFF', CREAM: '#FFF8DC', YELLOW: '#FFD700', CYAN: '#00E5FF', RED: '#FF0000', BG_DARK_BLUE: '#000005', V_DARK: '#010110' };
+        const LED_COLORS = { text: 'radial-gradient(circle, #00E5FF 0%, #001144 100%)', cold: 'radial-gradient(circle, rgba(0,210,255,0.8) 0%, rgba(58,123,213,0.4) 100%)', overheat: 'radial-gradient(circle, rgba(255,65,108,0.8) 0%, rgba(255,75,43,0.4) 100%)', dashboard: 'radial-gradient(circle, rgba(48,207,208,0.8) 0%, rgba(51,8,103,0.4) 100%)', myroboeyes: 'radial-gradient(circle, rgba(147,112,219,0.8) 0%, rgba(186,85,211,0.4) 100%)' };
         
         let my_eyeW=56, my_eyeH_Max=56, my_curLx=42, my_curLy=92, my_curLh=56, my_targetLx=42, my_targetLy=92, my_targetLh=56, my_currentMood = 0;
         let my_blinkTimer = performance.now()+2000, my_idleTimer = performance.now()+4000, my_moodTimer = performance.now()+4000;
 
-        // Matrix variables
-        const columns = 20;
-        const drops = Array(columns).fill(0);
-        const chars = "0123456789ABCDEF$+-*/=%".split("");
+        // Log Data Animation
+        let logs = [];
+        const logLines = [
+            "> SYSTEM OK", "> OBD CONNECTED", "> SCANNING PIDS...", "> RPM: 3200", "> SPEED: 104 km/h", "> FUEL: 74%", "> ENGINE TEMP: 90C", "> VOLTAGE: 14.2V", "> SYNCING CLOUD...", "> DATA READY"
+        ];
 
         function updateEyesLogic() {
             const now = performance.now();
@@ -84,51 +85,58 @@
             if (my_curLh < 1.0 && currentExpression !== 'shocked') my_targetLh = 56;
         }
 
-        function drawBaseEyes(bgColor, mood = null) {
+        function drawBaseEyes(bgColor) {
             ctx.fillStyle = bgColor; ctx.fillRect(0, 0, 240, 240);
             let drawW=56, drawH=Math.floor(my_curLh), drawRadius=16, finalY, xL, xR;
-            let drawMood = mood !== null ? mood : my_currentMood;
-
             if (my_curLh < 12) { drawW=64; drawH=Math.max(2, Math.floor(my_curLh/2)); drawRadius=3; finalY=Math.floor(my_curLy+25); xL=Math.floor(my_curLx-4); xR=xL+88; }
             else { finalY=Math.floor(my_curLy+(56-drawH)/2); xL=Math.floor(my_curLx); xR=xL+80; }
-            
             ctx.fillStyle = COLORS.WHITE;
             roundRect(ctx, xL, finalY, drawW, drawH, drawRadius, true); roundRect(ctx, xR, finalY, drawW, drawH, drawRadius, true);
-            
             if (my_curLh >= 12) {
                 let mH = drawH/2;
-                if (drawMood===2) { fillTriangle(ctx,xL,finalY,xL+drawW,finalY,xL+drawW,finalY+mH,bgColor); fillTriangle(ctx,xR,finalY,xR+drawW,finalY,xR,finalY+mH,bgColor); }
-                else if (drawMood===1) { fillTriangle(ctx,xL,finalY,xL+drawW,finalY,xL,finalY+mH,bgColor); fillTriangle(ctx,xR,finalY,xR+drawW,finalY,xR+drawW,finalY+mH,bgColor); }
-                else if (drawMood===3) { ctx.fillStyle = bgColor; roundRect(ctx,xL-2,finalY+mH,drawW+4,60,16,true); roundRect(ctx,xR-2,finalY+mH,drawW+4,60,16,true); }
+                if (my_currentMood===2) { fillTriangle(ctx,xL,finalY,xL+drawW,finalY,xL+drawW,finalY+mH,bgColor); fillTriangle(ctx,xR,finalY,xR+drawW,finalY,xR,finalY+mH,bgColor); }
+                else if (my_currentMood===1) { fillTriangle(ctx,xL,finalY,xL+drawW,finalY,xL,finalY+mH,bgColor); fillTriangle(ctx,xR,finalY,xR+drawW,finalY,xR+drawW,finalY+mH,bgColor); }
+                else if (my_currentMood===3) { ctx.fillStyle = bgColor; roundRect(ctx,xL-2,finalY+mH,drawW+4,60,16,true); roundRect(ctx,xR-2,finalY+mH,drawW+4,60,16,true); }
             }
         }
 
-        function drawMatrix() {
-            // Fond semi-transparent pour l'effet de traînée
-            ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+        function drawLogAnimation() {
+            ctx.fillStyle = COLORS.BLACK;
             ctx.fillRect(0, 0, 240, 240);
-            
-            ctx.fillStyle = COLORS.MATRIX;
-            ctx.font = "12px monospace";
-            
-            for(let i = 0; i < drops.length; i++) {
-                const text = chars[Math.floor(Math.random() * chars.length)];
-                ctx.fillText(text, i * 12, drops[i] * 12);
-                
-                if(drops[i] * 12 > 240 && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
+
+            // Ajouter une nouvelle ligne toutes les 30 frames
+            if (animFrame % 30 === 0) {
+                logs.push({text: logLines[Math.floor(Math.random()*logLines.length)], y: 240, opacity: 1.0});
             }
 
-            // Yeux qui apparaissent par-dessus en semi-transparence
-            ctx.globalAlpha = 0.5;
+            ctx.font = "14px monospace";
+            ctx.textAlign = "left";
+
+            for(let i = 0; i < logs.length; i++) {
+                ctx.fillStyle = `rgba(0, 229, 255, ${logs[i].opacity})`;
+                ctx.fillText(logs[i].text, 30, logs[i].y);
+                logs[i].y -= 1.5; // Monte doucement
+                if (logs[i].y < 120) logs[i].opacity -= 0.01; // S'efface en haut
+            }
+            
+            logs = logs.filter(l => l.y > 20);
+
+            // Yeux en arrière-plan transparent
+            ctx.globalAlpha = 0.3;
             drawBaseEyes("transparent");
             ctx.globalAlpha = 1.0;
 
-            // Texte central
-            ctx.textAlign = 'center';
-            ctx.fillStyle = COLORS.WHITE;
-            ctx.font = 'bold 20px monospace';
-            ctx.fillText("SYNCING...", 120, 130);
+            // Barre de scan (comme dans le GIF)
+            let scanY = (animFrame * 4) % 240;
+            let scanGrad = ctx.createLinearGradient(0, scanY, 0, scanY + 20);
+            scanGrad.addColorStop(0, "rgba(0, 229, 255, 0)");
+            scanGrad.addColorStop(0.5, "rgba(0, 229, 255, 0.3)");
+            scanGrad.addColorStop(1, "rgba(0, 229, 255, 0)");
+            ctx.fillStyle = scanGrad;
+            ctx.fillRect(0, scanY, 240, 20);
+            ctx.strokeStyle = "rgba(0, 229, 255, 0.5)";
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(0, scanY + 10); ctx.lineTo(240, scanY + 10); ctx.stroke();
         }
 
         function drawDashboard() {
@@ -145,22 +153,16 @@
         }
 
         function drawArc(x, y, r, innerR, startAngle, endAngle, color) { ctx.beginPath(); let sa = (startAngle+90)*Math.PI/180; let ea = (endAngle+90)*Math.PI/180; ctx.arc(x, y, r, sa, ea); ctx.arc(x, y, innerR, ea, sa, true); ctx.fillStyle = color; ctx.fill(); }
-        function setExpression(expr) { currentExpression = expr; animFrame = 0; ledRing.style.background = LED_COLORS[expr] || LED_COLORS.dashboard; switchTimer = performance.now(); if (expr === 'dashboard') { isSwitching = true; moodLabel.textContent = "INITIALISATION..."; } else { isSwitching = false; moodLabel.textContent = expr.toUpperCase(); } }
+        function setExpression(expr) { currentExpression = expr; animFrame = 0; ledRing.style.background = LED_COLORS[expr] || LED_COLORS.dashboard; switchTimer = performance.now(); if (expr === 'dashboard') { isSwitching = true; moodLabel.textContent = "INITIALISATION..."; } else { isSwitching = false; moodLabel.textContent = expr.toUpperCase(); } if(expr==='text') logs=[]; }
         function roundRect(ctx, x, y, width, height, radius, fill) { ctx.beginPath(); ctx.moveTo(x+radius, y); ctx.lineTo(x+width-radius, y); ctx.quadraticCurveTo(x+width, y, x+width, y+radius); ctx.lineTo(x+width, y+height-radius); ctx.quadraticCurveTo(x+width, y+height, x+width-radius, y+height); ctx.lineTo(x+radius, y+height); ctx.quadraticCurveTo(x, y+height, x, y+height-radius); ctx.lineTo(x, y+radius); ctx.quadraticCurveTo(x, y, x+radius, y); ctx.closePath(); if (fill) ctx.fill(); else ctx.stroke(); }
         function fillTriangle(ctx,x1,y1,x2,y2,x3,y3,color) { ctx.fillStyle=color; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.lineTo(x3,y3); ctx.closePath(); ctx.fill(); }
 
         function animate() {
             animFrame++; updateEyesLogic();
             if (currentExpression === 'dashboard') { if (isSwitching) { drawBaseEyes(COLORS.BLACK); if (performance.now()-switchTimer > 5000) { isSwitching = false; moodLabel.textContent = "DASHBOARD OBD"; } } else { drawDashboard(); } }
-            else if (currentExpression === 'text') { drawMatrix(); }
+            else if (currentExpression === 'text') { drawLogAnimation(); }
             else if (currentExpression === 'myroboeyes') { drawBaseEyes(COLORS.BLACK); }
-            else if (currentExpression === 'cold') { 
-                let shiverX = (Math.random()-0.5)*3; let shiverY = (Math.random()-0.5)*3;
-                drawBaseEyes('#001529'); 
-                ctx.fillStyle = COLORS.WHITE; roundRect(ctx, 80+shiverX, 170+shiverY, 80, 25, 5, true);
-                ctx.strokeStyle = '#CCCCCC'; ctx.lineWidth = 2;
-                for(let i=1; i<6; i++) { ctx.beginPath(); ctx.moveTo(80+shiverX+(80/6)*i, 170+shiverY); ctx.lineTo(80+shiverX+(80/6)*i, 195+shiverY); ctx.stroke(); }
-            }
+            else if (currentExpression === 'cold') { let shiverX = (Math.random()-0.5)*3; let shiverY = (Math.random()-0.5)*3; drawBaseEyes('#001529'); ctx.fillStyle = COLORS.WHITE; roundRect(ctx, 80+shiverX, 170+shiverY, 80, 25, 5, true); ctx.strokeStyle = '#CCCCCC'; ctx.lineWidth = 2; for(let i=1; i<6; i++) { ctx.beginPath(); ctx.moveTo(80+shiverX+(80/6)*i, 170+shiverY); ctx.lineTo(80+shiverX+(80/6)*i, 195+shiverY); ctx.stroke(); } ctx.beginPath(); ctx.moveTo(80+shiverX, 170+shiverY+12.5); ctx.lineTo(80+shiverX+80, 170+shiverY+12.5); ctx.stroke(); }
             else if (currentExpression === 'overheat') { drawBaseEyes('#290000', 2); ctx.fillStyle = COLORS.CYAN; for(let i=0; i<3; i++) { let dropY = 100 + (animFrame*2 + i*40)%100; ctx.beginPath(); ctx.arc(210, dropY, 4, 0, Math.PI*2); ctx.fill(); } }
             else if (currentExpression === 'shocked') { drawBaseEyes('#2e1a05'); }
             requestAnimationFrame(animate);
